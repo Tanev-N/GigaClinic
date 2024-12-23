@@ -108,15 +108,19 @@ CREATE TABLE `visiting` (
   `id_vis` int NOT NULL AUTO_INCREMENT,
   `patient_id_patient` int NOT NULL,
   `date` date NOT NULL,
+  `time` time NOT NULL,
   `diagnosis` varchar(100) NOT NULL,
   `complaints` varchar(100) NOT NULL,
   `doctor_id_doc` int NOT NULL,
+  `timetable_id` int NOT NULL,
   PRIMARY KEY (`id_vis`),
   UNIQUE KEY `id_vis_UNIQUE` (`id_vis`),
   KEY `fk_visiting_patient1_idx` (`patient_id_patient`),
   KEY `fk_visiting_doctor1_idx` (`doctor_id_doc`),
+  KEY `fk_visiting_timetable1_idx` (`timetable_id`),
   CONSTRAINT `fk_visiting_doctor1` FOREIGN KEY (`doctor_id_doc`) REFERENCES `doctor` (`id_doc`),
-  CONSTRAINT `fk_visiting_patient1` FOREIGN KEY (`patient_id_patient`) REFERENCES `patient` (`id_patient`)
+  CONSTRAINT `fk_visiting_patient1` FOREIGN KEY (`patient_id_patient`) REFERENCES `patient` (`id_patient`),
+  CONSTRAINT `fk_visiting_timetable1` FOREIGN KEY (`timetable_id`) REFERENCES `timetable` (`id_tit`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 LOCK TABLES `visiting` WRITE;
@@ -134,3 +138,54 @@ CREATE TABLE `doctor_schedule` (
   KEY `fk_schedule_doctor_idx` (`doctor_id`),
   CONSTRAINT `fk_schedule_doctor` FOREIGN KEY (`doctor_id`) REFERENCES `doctor` (`id_doc`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Таблица типов отчетов
+CREATE TABLE report_type (
+    id_report_type INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    parameters JSON -- Хранение параметров отчета в JSON формате
+);
+
+-- Таблица отчетов
+CREATE TABLE report (
+    id_report INT PRIMARY KEY AUTO_INCREMENT,
+    report_type_id INT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    created_by INT NOT NULL, -- ID менеджера, создавшего отчет
+    parameters JSON, -- Сохраненные параметры отчета
+    result JSON, -- Результаты отчета
+    FOREIGN KEY (report_type_id) REFERENCES report_type(id_report_type),
+    FOREIGN KEY (created_by) REFERENCES user(id_user)
+);
+
+-- Добавляем типы отчетов
+INSERT INTO report_type (name, description, parameters) VALUES
+(
+    'Количество пациентов у врача за месяц',
+    'Отчет показывает количество принятых пациентов у выбранного врача за указанный месяц',
+    '{"required": ["doctor_id", "month", "year"]}'
+),
+(
+    'Общее количество пациентов за месяц',
+    'Отчет показывает общее количество принятых пациентов всеми врачами за указанный месяц',
+    '{"required": ["month", "year"]}'
+),
+(
+    'Количество пациентов по диагнозу',
+    'Отчет показывает количество пациентов с указанным диагнозом',
+    '{"required": ["diagnosis"]}'
+);
+
+-- Таблица деталей отчетов
+CREATE TABLE report_details (
+    id_report_detail INT PRIMARY KEY AUTO_INCREMENT,
+    report_id INT NOT NULL,
+    patient_id INT NOT NULL,
+    doctor_id INT,
+    visit_date DATE,
+    diagnosis VARCHAR(255),
+    FOREIGN KEY (report_id) REFERENCES report(id_report),
+    FOREIGN KEY (patient_id) REFERENCES patient(id_patient),
+    FOREIGN KEY (doctor_id) REFERENCES doctor(id_doc)
+);

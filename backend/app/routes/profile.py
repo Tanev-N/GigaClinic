@@ -49,7 +49,7 @@ def get_user_appointments():
     SELECT 
         t.id_tit as id,
         t.admission as date,
-        t.time,
+        TIME_FORMAT(t.time, '%H:%i') as time,
         t.appearance,
         d.full_name as doctor_name,
         c.type as cabinet_type,
@@ -61,9 +61,7 @@ def get_user_appointments():
     JOIN doctor d ON t.doctor_id_doc = d.id_doc
     JOIN cabinet c ON t.cabinet_id_cab = c.id_cab
     JOIN patient p ON t.patient_id_patient = p.id_patient
-    LEFT JOIN visiting v ON v.patient_id_patient = p.id_patient 
-        AND v.doctor_id_doc = d.id_doc 
-        AND DATE(v.date) = DATE(t.admission)
+    LEFT JOIN visiting v ON v.timetable_id = t.id_tit
     WHERE p.user_id = %s
     ORDER BY t.admission DESC, t.time DESC
     """
@@ -72,13 +70,10 @@ def get_user_appointments():
     
     appointments = []
     for row in result:
-        seconds = int(row['time'].total_seconds())
-        time_str = f"{seconds // 3600:02d}:{(seconds % 3600) // 60:02d}"
-
         appointments.append({
             'id': row['id'],
             'date': row['date'].strftime('%Y-%m-%d'),
-            'time': time_str,
+            'time': row['time'],
             'doctor_name': row['doctor_name'],
             'cabinet': f"Кабинет №{row['cabinet_number']} ({row['cabinet_type']})",
             'appearance': row['appearance'],
@@ -150,7 +145,7 @@ def get_doctor_data():
             'cabinet': row['cabinet']
         })
     
-    # Добавляем расписание к данным врача
+    # Добавляем расписание �� данным врача
     doctor_data['schedule'] = schedule
     
     # Форматируем даты для фронтенда

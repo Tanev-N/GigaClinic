@@ -18,19 +18,32 @@ class SQLProvider:
         
         self.sql_path = pathlib.Path(__file__).parent / 'sql_queries'
 
-    def execute_query(self, query: str, params: Optional[tuple] = None) -> Union[List[Dict], int]:
-        connection = mysql.connector.connect(**self.connection_params)
+    def get_connection(self):
+        return mysql.connector.connect(**self.connection_params)
+
+    def execute_query(self, query: str, params: Optional[tuple] = None, return_last_id: bool = False) -> Union[List[Dict], int]:
+        connection = None
         cursor = None
         try:
+            connection = mysql.connector.connect(**self.connection_params)
             cursor = connection.cursor(dictionary=True)
+            
             cursor.execute(query, params)
             
-            if query.strip().upper().startswith('SELECT'):
+            # Всегда проверяем наличие результатов
+            if cursor.with_rows:
                 result = cursor.fetchall()
             else:
+                result = []
+
+            # Для не-SELECT запросов
+            if not query.strip().upper().startswith('SELECT'):
+                if return_last_id:
+                    result = cursor.lastrowid
+                else:
+                    result = cursor.rowcount
                 connection.commit()
-                result = cursor.rowcount
-                
+            
             return result
             
         except Exception as e:

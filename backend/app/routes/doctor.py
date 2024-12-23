@@ -31,6 +31,7 @@ def get_doctor_appointments():
         SELECT 
             t.id_tit as id,
             t.admission as date,
+            TIME_FORMAT(t.time, '%H:%i') as time_str,
             t.time,
             t.appearance,
             p.passport_data,
@@ -47,9 +48,7 @@ def get_doctor_appointments():
         FROM timetable t
         JOIN patient p ON t.patient_id_patient = p.id_patient
         JOIN cabinet c ON t.cabinet_id_cab = c.id_cab
-        LEFT JOIN visiting v ON v.patient_id_patient = p.id_patient 
-            AND v.doctor_id_doc = t.doctor_id_doc 
-            AND DATE(v.date) = DATE(t.admission)
+        LEFT JOIN visiting v ON v.timetable_id = t.id_tit
         WHERE t.doctor_id_doc = %s
         ORDER BY t.admission DESC, t.time DESC
     """
@@ -58,30 +57,20 @@ def get_doctor_appointments():
     
     appointments = []
     for row in result:
-        seconds = int(row['time'].total_seconds())
-        time_str = f"{seconds // 3600:02d}:{(seconds % 3600) // 60:02d}"
-        
-        # Получаем текущую ��ату и время в московском часовом поясе
+        # Получаем текущую дату и время в московском часовом поясе
         now = datetime.now(MSK)
         
-        # Преобразуем timedelta в time для корректного сравнения
-        time_obj = (datetime.min + row['time']).time()
+        # Преобразуем строку времени в объект time
+        time_str = row['time_str']
         
         # Создаем datetime для сравнения в московском часовом поясе
-        appointment_datetime = datetime.combine(row['date'], time_obj).replace(tzinfo=MSK)
-        
-        # Добавляем отладочную информацию
-        print(f"Moscow time now: {now}")
-        print(f"Appointment time (MSK): {appointment_datetime}")
-        print(f"Date comparison: {row['date']} vs {now.date()}")
-        print(f"Time comparison: {time_obj} vs {now.time()}")
+        appointment_datetime = datetime.combine(
+            row['date'], 
+            datetime.strptime(time_str, '%H:%M').time()
+        ).replace(tzinfo=MSK)
         
         # Проверяем, прошло ли время приема
-        is_past = False
-        if row['date'] < now.date():
-            is_past = True
-        elif row['date'] == now.date():
-            is_past = time_obj < now.time()
+        is_past = appointment_datetime < now
         
         appointments.append({
             'id': row['id'],
@@ -100,39 +89,72 @@ def get_doctor_appointments():
     
     return jsonify(appointments)
 
-@doctor_bp.route('/api/doctor/diagnosis', methods=['POST'])
+@doctor_bp.route('/api/doctor/add-diagnosis', methods=['POST'])
 @login_required
 @role_required(['doctor'])
 def add_diagnosis():
     data = request.get_json()
     
-    if not all(key in data for key in ['patient_id', 'diagnosis', 'complaints']):
-        return jsonify({'error': 'Не все поля заполнены'}), 400
-    
-    # Получаем id врача
-    doctor_query = "SELECT id_doc FROM doctor WHERE user_id = %s"
-    doctor_result = current_app.config['sql_provider'].execute_query(doctor_query, (request.user_id,))
-    
-    if not doctor_result:
-        return jsonify({'error': 'Врач не найден'}), 404
-    
-    doctor_id = doctor_result[0]['id_doc']
-    
-    # Добавляем запись в таблицу visiting, используя московское время
+    if not all(key in data for key in ['appointment_id', 'diagnosis', 'complaints']):
+        return jsonify({'error': 'Не все параметры указаны'}), 400
+
+    # Проверяем, существует ли запись и принадлежит ли она этому врачу
+    check_query = """
+    SELECT t.*, d.id_doc
+    FROM timetable t
+    JOIN doctor d ON d.id_doc = t.doctor_id_doc
+    WHERE t.id_tit = %s AND d.user_id = %s
+    """
+    appointment = current_app.config['sql_provider'].execute_query(
+        check_query, 
+        (data['appointment_id'], request.user_id)
+    )
+
+    if not appointment:
+        return jsonify({'error': 'Запись не найдена или у вас нет прав для ее изменения'}), 404
+
+    # Проверяем, не был ли уже добавлен диагноз
+    check_visit_query = """
+    SELECT id_vis
+    FROM visiting
+    WHERE timetable_id = %s
+    """
+    existing_visit = current_app.config['sql_provider'].execute_query(
+        check_visit_query,
+        (data['appointment_id'],)
+    )
+
+    if existing_visit:
+        return jsonify({'error': 'Диагноз для этой записи уже добавлен'}), 400
+
+    # Добавляем диагноз
     insert_query = """
-        INSERT INTO visiting 
-        (patient_id_patient, date, diagnosis, complaints, doctor_id_doc)
-        VALUES (%s, CURDATE(), %s, %s, %s)
+    INSERT INTO visiting (
+        patient_id_patient,
+        doctor_id_doc,
+        date,
+        time,
+        diagnosis,
+        complaints,
+        timetable_id
+    ) VALUES (
+        %s, %s, %s, 
+        (SELECT time FROM timetable WHERE id_tit = %s),
+        %s, %s, %s
+    )
     """
     
     try:
         current_app.config['sql_provider'].execute_query(
             insert_query,
             (
-                data['patient_id'],
+                appointment[0]['patient_id_patient'],
+                appointment[0]['doctor_id_doc'],
+                appointment[0]['admission'],
+                data['appointment_id'],
                 data['diagnosis'],
                 data['complaints'],
-                doctor_id
+                data['appointment_id']
             )
         )
         return jsonify({'message': 'Диагноз успешно добавлен'})

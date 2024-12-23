@@ -92,14 +92,14 @@ const DoctorProfile = () => {
     setSuccess('');
     
     try {
-      const response = await fetch('http://localhost:5000/api/doctor/diagnosis', {
+      const response = await fetch('http://localhost:5000/api/doctor/add-diagnosis', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
         body: JSON.stringify({
-          patient_id: appointment.patient_id,
+          appointment_id: appointment.id,
           diagnosis: diagnosisData.diagnosis,
           complaints: diagnosisData.complaints
         }),

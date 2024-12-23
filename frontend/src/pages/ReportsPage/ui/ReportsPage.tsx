@@ -356,7 +356,7 @@ const ReportsPage = () => {
         if (!reportType) return false;
 
         const requiredParams = JSON.parse(reportType.parameters).required;
-        return requiredParams.every(param => {
+        return requiredParams.every((param: string) => {
             const value = parameters[param];
             return value && value !== '';
         });

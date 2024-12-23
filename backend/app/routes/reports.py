@@ -15,7 +15,7 @@ class JSONEncoder(json.JSONEncoder):
 
 @reports_bp.route('/api/reports/types', methods=['GET'])
 @login_required
-@role_required(['manager'])
+@role_required(['manager', 'admin'])
 def get_report_types():
     query = "SELECT * FROM report_type"
     result = current_app.config['sql_provider'].execute_query(query)
@@ -23,7 +23,7 @@ def get_report_types():
 
 @reports_bp.route('/api/reports/available-doctors', methods=['GET'])
 @login_required
-@role_required(['manager'])
+@role_required(['manager', 'admin'])
 def get_available_doctors():
     query = """
     SELECT DISTINCT d.id_doc, d.full_name
@@ -36,7 +36,7 @@ def get_available_doctors():
 
 @reports_bp.route('/api/reports/available-months/all', methods=['GET'])
 @login_required
-@role_required(['manager'])
+@role_required(['manager', 'admin'])
 def get_all_available_months():
     query = """
     SELECT DISTINCT 
@@ -65,7 +65,7 @@ def get_all_available_months():
 
 @reports_bp.route('/api/reports/available-months/<int:doctor_id>', methods=['GET'])
 @login_required
-@role_required(['manager'])
+@role_required(['manager', 'admin'])
 def get_available_months(doctor_id):
     query = """
     SELECT DISTINCT 
@@ -95,7 +95,7 @@ def get_available_months(doctor_id):
 
 @reports_bp.route('/api/reports/available-diagnoses', methods=['GET'])
 @login_required
-@role_required(['manager'])
+@role_required(['manager', 'admin'])
 def get_available_diagnoses():
     query = """
     SELECT DISTINCT diagnosis
@@ -108,7 +108,7 @@ def get_available_diagnoses():
 
 @reports_bp.route('/api/reports/generate', methods=['POST'])
 @login_required
-@role_required(['manager'])
+@role_required(['manager', 'admin'])
 def generate_report():
     data = request.get_json()
     
@@ -202,7 +202,7 @@ def generate_report():
 
 @reports_bp.route('/api/reports/history', methods=['GET'])
 @login_required
-@role_required(['manager'])
+@role_required(['manager', 'admin'])
 def get_reports_history():
     query = """
     SELECT 
@@ -220,7 +220,7 @@ def get_reports_history():
 
 @reports_bp.route('/api/reports/details/<int:report_id>', methods=['GET'])
 @login_required
-@role_required(['manager'])
+@role_required(['manager', 'admin'])
 def get_report_details(report_id):
     # Получаем информацию об отчете
     report_query = """
@@ -294,7 +294,7 @@ def save_report_details(report_id, report_type_id, parameters, result):
     
     try:
         if report_type_id == 1:  # Отчет по врачу за месяц
-            # Получаем список визитов за указанный месяц
+            # Получаем список виз��тов за указанный месяц
             visits_query = """
             SELECT DISTINCT 
                 v.patient_id_patient,
@@ -385,7 +385,7 @@ def save_report_details(report_id, report_type_id, parameters, result):
 
 @reports_bp.route('/api/reports/<int:report_id>', methods=['DELETE'])
 @login_required
-@role_required(['manager'])
+@role_required(['manager', 'admin'])
 def delete_report(report_id):
     # Проверяем, существует ли отчет и принадлежит ли он текущему пользователю
     check_query = """

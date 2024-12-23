@@ -1,6 +1,6 @@
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
-// import { StoreProvider } from '@/app/providers/StoreProvider';
+
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import App from './App';
 
@@ -13,11 +13,9 @@ if (!container) {
 const root = createRoot(container);
 
 root.render(
-    // <StoreProvider>
         <BrowserRouter>
             <ErrorBoundary>
                 <App />
             </ErrorBoundary>
         </BrowserRouter>
-    // </StoreProvider>
 );

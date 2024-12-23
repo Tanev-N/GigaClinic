@@ -9,24 +9,26 @@ export const RegisterForm = () => {
         confirmPassword: '',
     });
     const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
     
     const navigate = useNavigate();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
-
-        if (!Object.values(formData).every(Boolean)) {
-            setError('Пожалуйста, заполните все поля');
-            return;
-        }
-
-        if (formData.password !== formData.confirmPassword) {
-            setError('Пароли не совпадают');
-            return;
-        }
+        setIsLoading(true);
 
         try {
+            if (!Object.values(formData).every(Boolean)) {
+                setError('Пожалуйста, заполните все поля');
+                return;
+            }
+
+            if (formData.password !== formData.confirmPassword) {
+                setError('Пароли не совпадают');
+                return;
+            }
+
             const response = await fetch('http://localhost:5000/api/auth/register', {
                 method: 'POST',
                 headers: {
@@ -41,15 +43,16 @@ export const RegisterForm = () => {
             const data = await response.json();
 
             if (!response.ok) {
-                setError(data.error || 'Ошибка при регистрации');
-                return;
+                throw new Error(data.error || 'Ошибка при регистрации');
             }
 
             navigate('/login', { 
                 state: { message: 'Регистрация успешна. Пожалуйста, войдите в систему.' }
             });
         } catch (err) {
-            setError('Проблема с подключением к серверу');
+            setError(err instanceof Error ? err.message : 'Проблема с подключением к серверу');
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -68,6 +71,7 @@ export const RegisterForm = () => {
                         onChange={(e) => setFormData({...formData, login: e.target.value})}
                         className={styles.input}
                         placeholder="Введите логин"
+                        disabled={isLoading}
                     />
                 </div>
 
@@ -79,6 +83,7 @@ export const RegisterForm = () => {
                         onChange={(e) => setFormData({...formData, password: e.target.value})}
                         className={styles.input}
                         placeholder="Введите пароль"
+                        disabled={isLoading}
                     />
                 </div>
 
@@ -90,11 +95,16 @@ export const RegisterForm = () => {
                         onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
                         className={styles.input}
                         placeholder="Повторите пароль"
+                        disabled={isLoading}
                     />
                 </div>
 
-                <button type="submit" className={styles.submitButton}>
-                    Зарегистрироваться
+                <button 
+                    type="submit" 
+                    className={styles.submitButton}
+                    disabled={isLoading}
+                >
+                    {isLoading ? 'Регистрация...' : 'Зарегистрироваться'}
                 </button>
 
                 <div className={styles.bottomText}>

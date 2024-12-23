@@ -1,123 +1,99 @@
 import React, { useState } from 'react';
 import styles from './Calendar.module.scss';
+import { classNames } from '@/shared/lib/classNames/classNames';
 
 interface CalendarProps {
-  selectedDate: Date | null;
-  onSelectDate: (date: Date) => void;
-  availableDays?: number[]; // дни недели, когда врач принимает (1-7)
+    selectedDate: Date | null;
+    onSelectDate: (date: Date) => void;
+    availableDays?: number[];
 }
 
-export const Calendar = ({ selectedDate, onSelectDate, availableDays = [] }: CalendarProps) => {
-  const [currentDate, setCurrentDate] = useState(new Date());
+export const Calendar = ({ selectedDate, onSelectDate, availableDays }: CalendarProps) => {
+    const [currentDate, setCurrentDate] = useState(new Date());
 
-  const daysInMonth = new Date(
-    currentDate.getFullYear(),
-    currentDate.getMonth() + 1,
-    0
-  ).getDate();
+    const months = [
+        'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+        'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
+    ];
 
-  const firstDayOfMonth = new Date(
-    currentDate.getFullYear(),
-    currentDate.getMonth(),
-    1
-  ).getDay();
+    const weekDays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 
-  // Корректируем firstDayOfMonth, чтобы понедельник был 1, а воскресенье 7
-  const adjustedFirstDayOfMonth = firstDayOfMonth === 0 ? 7 : firstDayOfMonth;
+    const prevMonth = () => {
+        setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1));
+    };
 
-  const prevMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1));
-  };
+    const nextMonth = () => {
+        setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1));
+    };
 
-  const nextMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1));
-  };
+    const isDateAvailable = (date: Date) => {
+        if (date < new Date(new Date().setHours(0, 0, 0, 0))) {
+            return false;
+        }
 
-  const isDateAvailable = (date: Date) => {
-    // Проверяем, что дата не в прошлом
-    if (date < new Date(new Date().setHours(0, 0, 0, 0))) {
-      return false;
-    }
-    
-    // Преобразуем день недели из формата JS (0-6) в наш формат (1-7)
-    const dayOfWeek = date.getDay();
-    const adjustedDayOfWeek = dayOfWeek === 0 ? 7 : dayOfWeek;
-    return availableDays.includes(adjustedDayOfWeek);
-  };
+        const dayOfWeek = date.getDay() || 7;
+        return availableDays?.includes(dayOfWeek) ?? true;
+    };
 
-  const isSelectedDate = (date: Date) => {
-    return selectedDate?.toDateString() === date.toDateString();
-  };
+    const renderDays = () => {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        const firstDay = new Date(year, month, 1).getDay() || 7;
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const days = [];
 
-  const monthNames = [
-    'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
-    'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
-  ];
+        // Добавляем пустые ячейки в начале
+        for (let i = 1; i < firstDay; i++) {
+            days.push(<div key={`empty-${i}`} className={styles.emptyDay} />);
+        }
 
-  const dayNames = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+        // Добавляем дни месяца
+        for (let day = 1; day <= daysInMonth; day++) {
+            const date = new Date(year, month, day);
+            const isAvailable = isDateAvailable(date);
+            const isToday = new Date().toDateString() === date.toDateString();
+            const isSelected = selectedDate?.toDateString() === date.toDateString();
 
-  const renderDays = () => {
-    const days = [];
-    const today = new Date();
+            days.push(
+                <div
+                    key={day}
+                    className={classNames(styles.day, {
+                        [styles.available]: isAvailable,
+                        [styles.unavailable]: !isAvailable,
+                        [styles.today]: isToday,
+                        [styles.selected]: isSelected,
+                    })}
+                    onClick={() => isAvailable && onSelectDate(new Date(year, month, day+1))}
+                >
+                    {day}
+                </div>
+            );
+        }
 
-    // Используем adjustedFirstDayOfMonth вместо firstDayOfMonth
-    for (let i = 0; i < adjustedFirstDayOfMonth - 1; i++) {
-      days.push(<div key={`empty-${i}`} className={styles.emptyDay} />);
-    }
+        return days;
+    };
 
-    // Добавляем дни месяца
-    for (let day = 1; day <= daysInMonth; day++) {
-      // Создаем новую дату, устанавливая часы в начале дня
-      const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day, 0, 0, 0);
-      const available = isDateAvailable(date);
-      const selected = isSelectedDate(date);
-      const isToday = date.toDateString() === today.toDateString();
+    return (
+        <div className={styles.calendar}>
+            <div className={styles.header}>
+                <button onClick={prevMonth}>&lt;</button>
+                <span>
+                    {months[currentDate.getMonth()]} {currentDate.getFullYear()}
+                </span>
+                <button onClick={nextMonth}>&gt;</button>
+            </div>
 
-      days.push(
-        <div
-          key={day}
-          className={`
-            ${styles.day}
-            ${available ? styles.available : styles.unavailable}
-            ${selected ? styles.selected : ''}
-            ${isToday ? styles.today : ''}
-          `}
-          onClick={(e) => {
-            e.preventDefault(); 
-            if (available) {
-              const selectedDate = new Date(Date.UTC(
-                currentDate.getFullYear(),
-                currentDate.getMonth(),
-                day,
-                0, 0, 0, 0
-              ));
-              onSelectDate(selectedDate);
-            }
-          }}
-        >
-          {day}
+            <div className={styles.weekDays}>
+                {weekDays.map(day => (
+                    <div key={day} className={styles.weekDay}>
+                        {day}
+                    </div>
+                ))}
+            </div>
+
+            <div className={styles.days}>
+                {renderDays()}
+            </div>
         </div>
-      );
-    }
-
-    return days;
-  };
-
-  return (
-    <div className={styles.calendar}>
-      <div className={styles.header}>
-        <button onClick={prevMonth}>&lt;</button>
-        <span>{monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}</span>
-        <button onClick={nextMonth}>&gt;</button>
-      </div>
-      <div className={styles.weekDays}>
-        {dayNames.map(day => (
-          <div key={day} className={styles.weekDay}>{day}</div>
-        ))}
-      </div>
-      <div className={styles.days}>
-        {renderDays()}
-      </div>
-    </div>
-  );
+    );
 }; 

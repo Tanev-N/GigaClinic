@@ -5,6 +5,7 @@ from app.database.sql_provider import SQLProvider
 from app.database.redis_provider import RedisProvider
 from app.routes.schedule import schedule_bp
 from app.routes.appointment import appointment_bp
+from app.routes.doctor import doctor_bp
 
 def create_app():
     app = Flask(__name__)
@@ -33,5 +34,6 @@ def create_app():
     app.register_blueprint(profile_bp)
     app.register_blueprint(schedule_bp)
     app.register_blueprint(appointment_bp)
+    app.register_blueprint(doctor_bp)
 
     return app 

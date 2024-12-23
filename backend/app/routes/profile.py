@@ -45,7 +45,29 @@ def update_patient_data():
 @profile_bp.route('/api/profile/appointments', methods=['GET'])
 @login_required
 def get_user_appointments():
-    query = current_app.config['sql_provider'].get_query('profile/get_user_appointments.sql')
+    query = """
+    SELECT 
+        t.id_tit as id,
+        t.admission as date,
+        t.time,
+        t.appearance,
+        d.full_name as doctor_name,
+        c.type as cabinet_type,
+        c.id_cab as cabinet_number,
+        v.diagnosis,
+        v.complaints,
+        v.id_vis as visit_id
+    FROM timetable t
+    JOIN doctor d ON t.doctor_id_doc = d.id_doc
+    JOIN cabinet c ON t.cabinet_id_cab = c.id_cab
+    JOIN patient p ON t.patient_id_patient = p.id_patient
+    LEFT JOIN visiting v ON v.patient_id_patient = p.id_patient 
+        AND v.doctor_id_doc = d.id_doc 
+        AND DATE(v.date) = DATE(t.admission)
+    WHERE p.user_id = %s
+    ORDER BY t.admission DESC, t.time DESC
+    """
+    
     result = current_app.config['sql_provider'].execute_query(query, (request.user_id,))
     
     appointments = []
@@ -59,7 +81,10 @@ def get_user_appointments():
             'time': time_str,
             'doctor_name': row['doctor_name'],
             'cabinet': f"Кабинет №{row['cabinet_number']} ({row['cabinet_type']})",
-            'appearance': row['appearance']
+            'appearance': row['appearance'],
+            'visit_id': row['visit_id'],
+            'diagnosis': row['diagnosis'],
+            'complaints': row['complaints']
         })
     
     return jsonify(appointments)
@@ -78,3 +103,60 @@ def delete_appointment(appointment_id):
         return jsonify({'error': 'Запись не найдена или нет прав для её удаления'}), 404
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@profile_bp.route('/api/profile/doctor', methods=['GET'])
+@login_required
+def get_doctor_data():
+    query = """
+    SELECT 
+        d.*,
+        u.login,
+        dep.name as department_name
+    FROM doctor d
+    JOIN user u ON d.user_id = u.id_user
+    JOIN department dep ON d.department_id_dep = dep.id_dep
+    WHERE u.id_user = %s
+    """
+    result = current_app.config['sql_provider'].execute_query(query, (request.user_id,))
+    
+    if not result:
+        return jsonify({'error': 'Врач не найден'}), 404
+        
+    doctor_data = result[0]
+    
+    # Получаем расписание врача
+    schedule_query = """
+    SELECT 
+        day_of_week,
+        start_time,
+        end_time,
+        cabinet
+    FROM doctor_schedule
+    WHERE doctor_id = %s
+    ORDER BY day_of_week
+    """
+    schedule_result = current_app.config['sql_provider'].execute_query(schedule_query, (doctor_data['id_doc'],))
+    
+    # Форматируем расписание
+    schedule = []
+    for row in schedule_result:
+        start_seconds = int(row['start_time'].total_seconds())
+        end_seconds = int(row['end_time'].total_seconds())
+        
+        schedule.append({
+            'day_of_week': row['day_of_week'],
+            'start_time': f"{start_seconds // 3600:02d}:{(start_seconds % 3600) // 60:02d}",
+            'end_time': f"{end_seconds // 3600:02d}:{(end_seconds % 3600) // 60:02d}",
+            'cabinet': row['cabinet']
+        })
+    
+    # Добавляем расписание к данным врача
+    doctor_data['schedule'] = schedule
+    
+    # Форматируем даты для фронтенда
+    doctor_data['birth'] = doctor_data['birth'].strftime('%Y-%m-%d')
+    doctor_data['employment'] = doctor_data['employment'].strftime('%Y-%m-%d')
+    if doctor_data['dismissal']:
+        doctor_data['dismissal'] = doctor_data['dismissal'].strftime('%Y-%m-%d')
+        
+    return jsonify(doctor_data)

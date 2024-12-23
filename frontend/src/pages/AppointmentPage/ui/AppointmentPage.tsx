@@ -7,6 +7,8 @@ import { Calendar } from '@/features/appointment/ui/Calendar/Calendar';
 interface Doctor {
   id_doc: number;
   full_name: string;
+  department_id_dep: number;
+  specialization: string;
 }
 
 interface AvailableSlots {
@@ -56,7 +58,7 @@ const AppointmentPage = () => {
       const data = await response.json();
       setDepartments(data);
     } catch (err) {
-      setError('Ошибка при загрузке списка отделений');
+      setError('О��ибка при загрузке списка отделений');
     }
   };
 
@@ -199,10 +201,10 @@ const AppointmentPage = () => {
                   setAppointmentData({
                     ...appointmentData,
                     selectedDate: date.toISOString().split('T')[0],
-                    selectedTime: '' // Сбрасываем выбранное время при смене даты
+                    selectedTime: ''
                   });
                 }}
-                availableDays={[1, 2, 3, 4, 5]} // Пн = 1, Вт = 2, Ср = 3, Чт = 4, Пт = 5
+                availableDays={[1, 2, 3, 4, 5]}
               />
               {appointmentData.selectedDate && !dateError && (
                 <div className={styles.timeSlots}>

@@ -1,7 +1,14 @@
+export enum UserRole {
+  ADMIN = 'admin',
+  PATIENT = 'patient',
+  DOCTOR = 'doctor',
+  MANAGER = 'manager'
+}
+
 export interface User {
-  id: string;
-  username: string;
-  role?: string;
+  id: number;
+  login: string;
+  role: UserRole;
 }
 
 export interface UserSchema {

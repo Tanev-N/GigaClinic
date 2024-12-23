@@ -1,28 +1,23 @@
 import { useState } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { userActions } from '@/entities/User';
 import styles from '@/shared/styles/forms.module.scss';
 
 export const LoginForm = () => {
-    const [login, setLogin] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
-    
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const location = useLocation();
-
-    const from = location.state?.from?.pathname || '/';
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [formData, setFormData] = useState({
+        login: '',
+        password: '',
+    });
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
-
-        if (!login || !password) {
-            setError('Пожалуйста, заполните все поля');
-            return;
-        }
+        setIsLoading(true);
 
         try {
             const response = await fetch('http://localhost:5000/api/auth/login', {
@@ -31,35 +26,24 @@ export const LoginForm = () => {
                     'Content-Type': 'application/json',
                 },
                 credentials: 'include',
-                body: JSON.stringify({ login, password }),
+                body: JSON.stringify(formData),
             });
 
             const data = await response.json();
 
             if (!response.ok) {
-                switch (response.status) {
-                    case 404:
-                        setError('Пользователь не найден');
-                        break;
-                    case 401:
-                        setError('Неверный пароль');
-                        break;
-                    default:
-                        setError('Ошибка входа в систему');
-                }
-                return;
+                throw new Error(data.error || 'Ошибка при входе');
             }
 
-            const userData = {
-                id: data.user_id,
-                username: login,
-            };
+            // Сохраняем данные пользователя в Redux и localStorage
+            dispatch(userActions.setAuthData(data.user));
+            localStorage.setItem('user', JSON.stringify(data.user));
 
-            dispatch(userActions.setAuthData(userData));
-            localStorage.setItem('user', JSON.stringify(userData));
-            navigate(from, { replace: true });
+            navigate('/');
         } catch (err) {
-            setError('Проблема с подключением к серверу');
+            setError(err instanceof Error ? err.message : 'Ошибка при входе');
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -75,8 +59,8 @@ export const LoginForm = () => {
                     <input
                         type="text"
                         className={styles.input}
-                        value={login}
-                        onChange={(e) => setLogin(e.target.value)}
+                        value={formData.login}
+                        onChange={(e) => setFormData({ ...formData, login: e.target.value })}
                         placeholder="Введите логин"
                     />
                 </div>
@@ -86,8 +70,8 @@ export const LoginForm = () => {
                     <input
                         type="password"
                         className={styles.input}
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        value={formData.password}
+                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                         placeholder="Введите пароль"
                     />
                 </div>

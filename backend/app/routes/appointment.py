@@ -112,3 +112,41 @@ def create_appointment():
         return jsonify({'message': 'Запись создана успешно'}), 201
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@appointment_bp.route('/check-slots', methods=['GET'])
+def check_slots():
+    doctor_id = request.args.get('doctor_id')
+    date = request.args.get('date')
+    
+    if not all([doctor_id, date]):
+        return jsonify({'error': 'Не все параметры указаны'}), 400
+        
+    try:
+        # Получаем расписание врача на этот день недели
+        schedule_query = """
+            SELECT * FROM doctor_schedule 
+            WHERE doctor_id = %s AND day_of_week = WEEKDAY(%s) + 1
+        """
+        schedule = current_app.config['sql_provider'].execute_query(schedule_query, (doctor_id, date))
+        
+        if not schedule:
+            return jsonify({'has_slots': False})
+            
+        # Получаем занятые слоты
+        booked_slots_query = """
+            SELECT time FROM timetable 
+            WHERE doctor_id_doc = %s AND admission = %s
+        """
+        booked_slots = current_app.config['sql_provider'].execute_query(
+            booked_slots_query, 
+            (doctor_id, date)
+        )
+        
+        # Если все слоты заняты
+        if len(booked_slots) >= 8:  # Предполагаем максимум 8 слотов в день
+            return jsonify({'has_slots': False})
+            
+        return jsonify({'has_slots': True})
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

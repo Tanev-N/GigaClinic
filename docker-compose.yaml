@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  db:
+    build:
+      context: ./database
+    container_name: mysql_db
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: clinic
+      MYSQL_DATABASE: clinic
+      MYSQL_USER: clinic
+      MYSQL_PASSWORD: clinic
+      TZ: Europe/Moscow
+      LANG: ru_RU.UTF-8
+      LC_ALL: ru_RU.UTF-8
+      MYSQL_CHARSET: utf8mb4
+      MYSQL_COLLATION: utf8mb4_unicode_ci
+    volumes:
+      - db_data:/var/lib/mysql
+
+  backend:
+    build:
+      context: ./backend
+    container_name: flask_backend
+    ports:
+      - "5000:5000"
+    environment:
+      DB_HOST: db
+      DB_NAME: clinic
+      DB_USER: clinic
+      DB_PASSWORD: clinic
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    volumes:
+      - ./backend/app:/app/app
+    depends_on:
+      - db
+      - redis
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: vite_frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+    depends_on:
+      - backend
+
+  redis:
+    image: redis:alpine
+    container_name: redis_session
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  db_data:
+  redis_data:

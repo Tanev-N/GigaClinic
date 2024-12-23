@@ -1,0 +1,93 @@
+.footer {
+  background-color: #2C2C2C;
+  padding: 2rem 0;
+  width: 100%;
+  color: white;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  height: 50px;
+}
+
+.mainContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 50px;
+}
+
+.logoSection {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 50px;
+  width: 50px;
+  padding: 0;
+  img {
+    height: 50px;
+    width: 50px;
+  }
+}
+
+.navigation {
+  display: flex;
+  gap: 4rem;
+}
+
+.navRow {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+}
+
+.navLink {
+  color: white;
+  text-decoration: none;
+  font-size: 1rem;
+  transition: color 0.3s ease;
+  
+  &:hover {
+    color: #00AEEF;
+  }
+}
+
+.socialLinks {
+  display: flex;
+  gap: 1rem;
+}
+
+.socialLink {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: #00AEEF;
+  transition: background-color 0.3s ease;
+  
+  &:hover {
+    background-color: #0090c5;
+  }
+}
+
+.vkIcon {
+  width: 20px;
+  height: 20px;
+  background-image: url('@/shared/assets/icons/vk.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.telegramIcon {
+  width: 20px;
+  height: 20px;
+  background-image: url('@/shared/assets/icons/telegram.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+} 

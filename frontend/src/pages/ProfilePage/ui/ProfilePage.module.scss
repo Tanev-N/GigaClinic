@@ -1,0 +1,190 @@
+.profileContainer {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.title {
+  font-size: 2rem;
+  margin-bottom: 2rem;
+  color: #333;
+}
+
+.section {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    color: #333;
+  }
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.formGroup {
+  margin-bottom: 1.5rem;
+
+  label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #666;
+  }
+
+  input {
+    width: 95%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+
+    &:disabled {
+      background-color: #f5f5f5;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.editButton, .saveButton, .cancelButton {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.editButton {
+  background-color: #00b0f0;
+  color: white;
+
+  &:hover {
+    background-color: #0099d6;
+  }
+}
+
+.saveButton {
+  background-color: #4caf50;
+  color: white;
+
+  &:hover {
+    background-color: #45a049;
+  }
+}
+
+.cancelButton {
+  background-color: #f44336;
+  color: white;
+
+  &:hover {
+    background-color: #da190b;
+  }
+}
+
+.error {
+  background-color: #ffebee;
+  color: #c62828;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.success {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.appointmentsList {
+  display: grid;
+  gap: 1rem;
+}
+
+.appointmentCard {
+  padding: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #fff;
+  position: relative;
+
+  .appointmentHeader {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+  }
+
+  .dateTime {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+
+    .date {
+      font-weight: 500;
+    }
+
+    .time {
+      color: #666;
+    }
+  }
+
+  .appearance {
+    padding: 0.25rem 0.5rem;
+    background-color: #e3f2fd;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    color: #1976d2;
+  }
+
+  .doctorName {
+    margin-bottom: 0.5rem;
+    color: #333;
+  }
+
+  .cabinet {
+    font-size: 0.875rem;
+    color: #666;
+    margin-bottom: 1rem;
+  }
+
+  .deleteButton {
+    padding: 0.5rem 1rem;
+    background-color: #f44336;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    font-size: 0.875rem;
+    display: inline-block;
+    min-width: 150px;
+
+    &:hover {
+      background-color: #d32f2f;
+    }
+  }
+}
+
+.noAppointments {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+} 

@@ -1,0 +1,83 @@
+.authContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 400px); 
+  padding: 2rem;
+}
+
+.authForm {
+  background: #00B0F0;
+  padding: 2rem;
+  border-radius: 10px;
+  width: 100%;
+  max-width: 400px;
+  color: white;
+}
+
+.title {
+  font-size: 2rem;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.formGroup {
+  margin-bottom: 1.5rem;
+}
+
+.label {
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.input {
+  width: 93%;
+  padding: 0.75rem;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 5px;
+  background: transparent;
+  color: white;
+  font-size: 1rem;
+
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: white;
+  }
+}
+
+.submitButton {
+  width: 100%;
+  padding: 0.75rem;
+  background: white;
+  border: none;
+  border-radius: 5px;
+  color: #00B0F0;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s;
+
+  &:hover {
+    background-color: #f0f0f0;
+  }
+}
+
+.bottomText {
+  margin-top: 1rem;
+  text-align: center;
+  font-size: 0.9rem;
+
+  a {
+    color: white;
+    text-decoration: underline;
+    margin-left: 0.5rem;
+
+    &:hover {
+      text-decoration: none;
+    }
+  }
+} 

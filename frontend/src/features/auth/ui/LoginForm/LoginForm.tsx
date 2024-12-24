@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { userActions } from '@/entities/User';
 import styles from '@/shared/styles/forms.module.scss';
+import { API_ENDPOINTS } from '@/shared/config/api';
 
 export const LoginForm = () => {
     const dispatch = useDispatch();
@@ -20,7 +21,7 @@ export const LoginForm = () => {
         setIsLoading(true);
 
         try {
-            const response = await fetch('http://localhost:5000/api/auth/login', {
+            const response = await fetch(API_ENDPOINTS.AUTH.LOGIN, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

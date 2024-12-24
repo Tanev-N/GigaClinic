@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { getUserAuthData } from '@/entities/User';
 import styles from '../ProfilePage.module.scss';
+import { API_ENDPOINTS, API_BASE_URL } from '@/shared/config/api';
 
 interface PatientData {
   passport_data: string;
@@ -41,7 +42,7 @@ const PatientProfile = () => {
   });
   const [appointments, setAppointments] = useState<Appointment[]>([]);
 
-  // Вычис��яем максимальную дату (18 лет назад от текущей даты)
+  // Вычисляем максимальную дату (18 лет назад от текущей даты)
   const maxBirthDate = (() => {
     const date = new Date();
     date.setFullYear(date.getFullYear() - 18);
@@ -62,7 +63,7 @@ const PatientProfile = () => {
 
   const fetchPatientData = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/profile/patient', {
+      const response = await fetch(API_ENDPOINTS.PROFILE.PATIENT, {
         credentials: 'include'
       });
       const data = await response.json();
@@ -82,7 +83,7 @@ const PatientProfile = () => {
 
   const fetchAppointments = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/profile/appointments', {
+      const response = await fetch(API_ENDPOINTS.PROFILE.APPOINTMENTS, {
         credentials: 'include'
       });
       const data = await response.json();
@@ -112,36 +113,79 @@ const PatientProfile = () => {
     setError('');
     setSuccess('');
 
+    // Проверяем заполнение всех полей
+    if (!patientData.passport_data.trim()) {
+        setError('Пожалуйста, введите ФИО');
+        return;
+    }
+
+    if (!patientData.address.trim()) {
+        setError('Пожалуйста, введите адрес');
+        return;
+    }
+
+    if (!patientData.birth) {
+        setError('Пожалуйста, введите дату рождения');
+        return;
+    }
+
+    // Проверяем формат ФИО (три слова, только буквы)
+    const nameRegex = /^[А-ЯЁ][а-яё]+\s[А-ЯЁ][а-яё]+\s[А-ЯЁ][а-яё]+$/;
+    if (!nameRegex.test(patientData.passport_data.trim())) {
+        setError('ФИО должно содержать Фамилию, Имя и Отчество с заглавной буквы');
+        return;
+    }
+
+    // Проверяем возраст (от 18 до 120 лет)
+    const birthDate = new Date(patientData.birth);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+    }
+
+    if (age < 18) {
+        setError('Пациент должен быть старше 18 лет');
+        return;
+    }
+
+    if (age > 120) {
+        setError('Указан некорректный возраст');
+        return;
+    }
+
     try {
-      const response = await fetch('http://localhost:5000/api/profile/patient', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          passport_data: patientData.passport_data,
-          address: patientData.address,
-          birth: patientData.birth,
-        }),
-      });
+        const response = await fetch(API_ENDPOINTS.PROFILE.PATIENT, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                passport_data: patientData.passport_data.trim(),
+                address: patientData.address.trim(),
+                birth: patientData.birth,
+            }),
+        });
 
-      const data = await response.json();
+        const data = await response.json();
 
-      if (response.ok) {
-        setSuccess('Данные успешно обновлены');
-        setIsEditing(false);
-      } else {
-        setError(data.error || 'Ошибка при обновлении данных');
-      }
+        if (response.ok) {
+            setSuccess('Данные успешно обновлены');
+            setIsEditing(false);
+        } else {
+            setError(data.error || 'Ошибка при обновлении данных');
+        }
     } catch (err) {
-      setError('Ошибка при обновлении данных');
+        setError('Ошибка при обновлении данных');
     }
   };
 
   const handleDeleteAppointment = async (appointmentId: number) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/profile/appointments/${appointmentId}`, {
+      const response = await fetch(API_ENDPOINTS.PROFILE.DELETE_APPOINTMENT(appointmentId), {
         method: 'DELETE',
         credentials: 'include'
       });
@@ -180,12 +224,20 @@ const PatientProfile = () => {
 
         <form onSubmit={handleSubmit}>
           <div className={styles.formGroup}>
-            <label>Паспортные данные</label>
+            <label>
+              ФИО:
+              {isEditing && <span className={styles.hint}> (Фамилия Имя Отчество)</span>}
+            </label>
             <input
               type="text"
               value={patientData.passport_data}
-              onChange={(e) => setPatientData({...patientData, passport_data: e.target.value})}
+              onChange={(e) => setPatientData({
+                ...patientData,
+                passport_data: e.target.value
+              })}
               disabled={!isEditing}
+              placeholder="Иванов Иван Иванович"
+              className={styles.input}
             />
           </div>
 

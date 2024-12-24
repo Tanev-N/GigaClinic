@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { StepIndicator } from '@/features/appointment/ui/StepIndicator/StepIndicator';
 import styles from './AppointmentPage.module.scss';
 import { Calendar } from '@/features/appointment/ui/Calendar/Calendar';
+import { API_ENDPOINTS, API_BASE_URL } from '@/shared/config/api';
 
 interface Doctor {
   id_doc: number;
@@ -52,19 +53,19 @@ const AppointmentPage = () => {
 
   const fetchDepartments = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/schedule/departments', {
+      const response = await fetch(API_ENDPOINTS.SCHEDULE.DEPARTMENTS, {
         credentials: 'include'
       });
       const data = await response.json();
       setDepartments(data);
     } catch (err) {
-      setError('О��ибка при загрузке списка отделений');
+      setError('Ошибка при загрузке списка отделений');
     }
   };
 
   const fetchDoctors = async (departmentId: number) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/schedule/doctors/${departmentId}`, {
+      const response = await fetch(API_ENDPOINTS.SCHEDULE.DOCTORS_BY_DEPARTMENT(departmentId), {
         credentials: 'include'
       });
       const data = await response.json();
@@ -80,7 +81,7 @@ const AppointmentPage = () => {
     try {
       setDateError('');
       const response = await fetch(
-        `http://localhost:5000/api/appointment/available-slots?doctor_id=${appointmentData.selectedDoctor}&date=${appointmentData.selectedDate}`,
+        API_ENDPOINTS.APPOINTMENT.AVAILABLE_SLOTS(appointmentData.selectedDoctor, appointmentData.selectedDate),
         { credentials: 'include' }
       );
       const data = await response.json();
@@ -111,19 +112,20 @@ const AppointmentPage = () => {
     setStep(prev => prev - 1);
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
-      const response = await fetch('http://localhost:5000/api/appointment/create', {
+      const response = await fetch(API_ENDPOINTS.APPOINTMENT.CREATE, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
         body: JSON.stringify({
           doctor_id: appointmentData.selectedDoctor,
           date: appointmentData.selectedDate,
           time: appointmentData.selectedTime,
         }),
+        credentials: 'include',
       });
 
       const data = await response.json();

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styles from './ReportsPage.module.scss';
+import { API_ENDPOINTS, API_BASE_URL } from '@/shared/config/api';
 
 interface ReportType {
     id_report_type: number;
@@ -92,7 +93,7 @@ const ReportsPage = () => {
 
     const fetchReportTypes = async () => {
         try {
-            const response = await fetch('http://localhost:5000/api/reports/types', {
+            const response = await fetch(API_ENDPOINTS.REPORTS.TYPES, {
                 credentials: 'include'
             });
             const data = await response.json();
@@ -108,7 +109,7 @@ const ReportsPage = () => {
 
     const fetchDoctors = async () => {
         try {
-            const response = await fetch('http://localhost:5000/api/reports/available-doctors', {
+            const response = await fetch(API_ENDPOINTS.REPORTS.AVAILABLE_DOCTORS, {
                 credentials: 'include'
             });
             const data = await response.json();
@@ -122,7 +123,7 @@ const ReportsPage = () => {
 
     const fetchAvailableMonths = async (doctorId: string) => {
         try {
-            const response = await fetch(`http://localhost:5000/api/reports/available-months/${doctorId}`, {
+            const response = await fetch(API_ENDPOINTS.REPORTS.AVAILABLE_MONTHS_BY_DOCTOR(doctorId), {
                 credentials: 'include'
             });
             const data = await response.json();
@@ -136,7 +137,7 @@ const ReportsPage = () => {
 
     const fetchDiagnoses = async () => {
         try {
-            const response = await fetch('http://localhost:5000/api/reports/available-diagnoses', {
+            const response = await fetch(API_ENDPOINTS.REPORTS.AVAILABLE_DIAGNOSES, {
                 credentials: 'include'
             });
             const data = await response.json();
@@ -150,7 +151,7 @@ const ReportsPage = () => {
 
     const fetchReportsHistory = async () => {
         try {
-            const response = await fetch('http://localhost:5000/api/reports/history', {
+            const response = await fetch(API_ENDPOINTS.REPORTS.HISTORY, {
                 credentials: 'include'
             });
             const data = await response.json();
@@ -166,7 +167,7 @@ const ReportsPage = () => {
 
     const fetchAvailableMonthsForAll = async () => {
         try {
-            const response = await fetch('http://localhost:5000/api/reports/available-months/all', {
+            const response = await fetch(`${API_ENDPOINTS.REPORTS.AVAILABLE_MONTHS}/all`, {
                 credentials: 'include'
             });
             const data = await response.json();
@@ -182,16 +183,16 @@ const ReportsPage = () => {
         if (!selectedType) return;
 
         try {
-            const response = await fetch('http://localhost:5000/api/reports/generate', {
+            const response = await fetch(API_ENDPOINTS.REPORTS.GENERATE, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                credentials: 'include',
                 body: JSON.stringify({
                     report_type_id: selectedType,
                     parameters: parameters
                 }),
+                credentials: 'include',
             });
 
             const data = await response.json();
@@ -209,7 +210,7 @@ const ReportsPage = () => {
 
     const fetchReportDetails = async (reportId: number) => {
         try {
-            const response = await fetch(`http://localhost:5000/api/reports/details/${reportId}`, {
+            const response = await fetch(API_ENDPOINTS.REPORTS.DETAILS(reportId), {
                 credentials: 'include'
             });
             const data = await response.json();
@@ -424,27 +425,18 @@ const ReportsPage = () => {
         );
     };
 
-    const handleDeleteReport = async (reportId: number, event: React.MouseEvent) => {
-        event.stopPropagation(); // Предотвращаем открытие деталей отчета
-        
+    const handleDeleteReport = async (reportId: number) => {
         try {
-            const response = await fetch(`http://localhost:5000/api/reports/${reportId}`, {
+            const response = await fetch(API_ENDPOINTS.REPORTS.DELETE(reportId), {
                 method: 'DELETE',
                 credentials: 'include'
             });
+            const data = await response.json();
             
             if (response.ok) {
                 setReports(reports.filter(report => report.id_report !== reportId));
                 setSuccess('Отчет успешно удален');
-                
-                // Если был открыт удаляемый отчет, закрываем его
-                if (selectedReport === reportId) {
-                    setSelectedReport(null);
-                    setReportDetails(null);
-                    setIsModalOpen(false);
-                }
             } else {
-                const data = await response.json();
                 setError(data.error || 'Ошибка при удалении отчета');
             }
         } catch (err) {
@@ -461,7 +453,7 @@ const ReportsPage = () => {
                 </span>
                 <button 
                     className={styles.deleteButton}
-                    onClick={(e) => handleDeleteReport(report.id_report, e)}
+                    onClick={() => handleDeleteReport(report.id_report)}
                     title="Удалить отчет"
                 >
                     ×

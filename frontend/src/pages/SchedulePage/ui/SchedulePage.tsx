@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import styles from './SchedulePage.module.scss';
+import { API_ENDPOINTS } from '@/shared/config/api';
 
 interface DoctorSchedule {
   id_doc: number;
@@ -23,7 +24,7 @@ const SchedulePage = () => {
 
   const fetchDoctorsSchedule = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/schedule/doctors', {
+      const response = await fetch(API_ENDPOINTS.SCHEDULE.DOCTORS, {
         credentials: 'include'
       });
       const data = await response.json();

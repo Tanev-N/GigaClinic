@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './AdminProfile.module.scss';
+import { API_ENDPOINTS } from '@/shared/config/api';
 
 interface AdminInfo {
     id_user: number;
@@ -12,16 +13,16 @@ const AdminProfile = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        fetch('http://localhost:5000/api/admin/profile', {
+        fetch(API_ENDPOINTS.ADMIN.PROFILE, {
             credentials: 'include'
         })
-            .then(res => res.json())
+            .then(response => response.json())
             .then(data => {
-                if (!data.error) {
-                    setAdminInfo(data);
-                }
+                setAdminInfo(data);
             })
-            .catch(err => console.error(err));
+            .catch(error => {
+                console.error('Error fetching admin info:', error);
+            });
     }, []);
 
     if (!adminInfo) {

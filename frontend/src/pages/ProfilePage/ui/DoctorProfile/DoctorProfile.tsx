@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styles from '../ProfilePage.module.scss';
+import { API_ENDPOINTS } from '@/shared/config/api';
 
 interface DoctorSchedule {
   day_of_week: number;
@@ -55,7 +56,7 @@ const DoctorProfile = () => {
 
   const fetchDoctorData = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/profile/doctor', {
+      const response = await fetch(API_ENDPOINTS.PROFILE.DOCTOR, {
         credentials: 'include'
       });
       const data = await response.json();
@@ -72,7 +73,7 @@ const DoctorProfile = () => {
 
   const fetchAppointments = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/doctor/appointments', {
+      const response = await fetch(API_ENDPOINTS.DOCTOR.APPOINTMENTS, {
         credentials: 'include'
       });
       const data = await response.json();
@@ -87,22 +88,22 @@ const DoctorProfile = () => {
     }
   };
 
-  const handleAddDiagnosis = async (appointment: Appointment) => {
+  const handleAddDiagnosis = async (appointmentId: number) => {
     setError('');
     setSuccess('');
     
     try {
-      const response = await fetch('http://localhost:5000/api/doctor/add-diagnosis', {
+      const response = await fetch(API_ENDPOINTS.DOCTOR.ADD_DIAGNOSIS, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
         body: JSON.stringify({
-          appointment_id: appointment.id,
+          appointment_id: appointmentId,
           diagnosis: diagnosisData.diagnosis,
           complaints: diagnosisData.complaints
         }),
+        credentials: 'include',
       });
 
       const data = await response.json();
@@ -261,7 +262,7 @@ const DoctorProfile = () => {
                     <div className={styles.formButtons}>
                       <button
                         className={styles.saveButton}
-                        onClick={() => handleAddDiagnosis(selectedAppointment)}
+                        onClick={() => handleAddDiagnosis(selectedAppointment?.id || 0)}
                       >
                         Сохранить
                       </button>

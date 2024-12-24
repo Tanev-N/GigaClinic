@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styles from './AdminPage.module.scss';
+import { API_ENDPOINTS, API_BASE_URL } from '@/shared/config/api';
 
 interface Column {
     COLUMN_NAME: string;
@@ -39,7 +40,7 @@ const AdminPage = () => {
 
     const fetchTables = async () => {
         try {
-            const response = await fetch('http://localhost:5000/api/admin/tables', {
+            const response = await fetch(API_ENDPOINTS.ADMIN.TABLES, {
                 credentials: 'include'
             });
             const data = await response.json();
@@ -51,7 +52,7 @@ const AdminPage = () => {
 
     const fetchTableData = async () => {
         try {
-            const response = await fetch(`http://localhost:5000/api/admin/table/${selectedTable}`, {
+            const response = await fetch(API_ENDPOINTS.ADMIN.TABLE_DATA(selectedTable), {
                 credentials: 'include'
             });
             const data = await response.json();
@@ -63,7 +64,7 @@ const AdminPage = () => {
 
     const fetchTableSchema = async () => {
         try {
-            const response = await fetch(`http://localhost:5000/api/admin/table/${selectedTable}/schema`, {
+            const response = await fetch(API_ENDPOINTS.ADMIN.TABLE_SCHEMA(selectedTable), {
                 credentials: 'include'
             });
             const data = await response.json();

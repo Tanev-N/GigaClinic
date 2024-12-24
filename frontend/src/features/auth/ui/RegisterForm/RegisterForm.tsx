@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import styles from '@/shared/styles/forms.module.scss';
+import { API_ENDPOINTS } from '@/shared/config/api';
 
 export const RegisterForm = () => {
     const [formData, setFormData] = useState({
@@ -29,15 +30,13 @@ export const RegisterForm = () => {
                 return;
             }
 
-            const response = await fetch('http://localhost:5000/api/auth/register', {
+            const response = await fetch(API_ENDPOINTS.AUTH.REGISTER, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    login: formData.login,
-                    password: formData.password,
-                }),
+                body: JSON.stringify(formData),
+                credentials: 'include',
             });
 
             const data = await response.json();

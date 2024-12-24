@@ -17,8 +17,13 @@ services:
       LC_ALL: ru_RU.UTF-8
       MYSQL_CHARSET: utf8mb4
       MYSQL_COLLATION: utf8mb4_unicode_ci
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     volumes:
       - db_data:/var/lib/mysql
+    stop_grace_period: 1m
+    restart: unless-stopped
 
   backend:
     build:
@@ -33,11 +38,15 @@ services:
       DB_PASSWORD: clinic
       REDIS_HOST: redis
       REDIS_PORT: 6379
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     volumes:
       - ./backend/app:/app/app
     depends_on:
       - db
       - redis
+    restart: unless-stopped
 
   frontend:
     build:
@@ -45,18 +54,26 @@ services:
     container_name: vite_frontend
     ports:
       - "5173:5173"
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     volumes:
       - ./frontend:/app
     depends_on:
       - backend
+    restart: unless-stopped
 
   redis:
     image: redis:alpine
     container_name: redis_session
     ports:
       - "6379:6379"
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     volumes:
       - redis_data:/data
+    restart: unless-stopped
 
 volumes:
   db_data:

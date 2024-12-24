@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { getUserAuthData, userActions } from '@/entities/User';
 import styles from './Header.module.scss';
 import { Logo } from '@/shared/ui/Logo';
+import { API_ENDPOINTS } from '@/shared/config/api';
 
 export const Header = () => {
   const auth = useSelector(getUserAuthData);
@@ -12,7 +13,7 @@ export const Header = () => {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/auth/logout', {
+      const response = await fetch(API_ENDPOINTS.AUTH.LOGOUT, {
         method: 'POST',
         credentials: 'include',
       });
